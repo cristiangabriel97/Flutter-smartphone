@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:smartphone_app/blocs/smartphone_bloc.dart';
 import 'package:smartphone_app/blocs/smartphone_event.dart';
 
@@ -13,6 +14,11 @@ class _IngresoDatoScreenState extends State<IngresoDatoScreen> {
   final _detallesController = TextEditingController();
   final _precioController = TextEditingController();
   bool _disponible = false;
+
+  Future<String?> _getUserEmail() async {
+    final user = FirebaseAuth.instance.currentUser;
+    return user?.email;
+  }
 
   void _saveData(BuildContext context) {
     final smartphoneData = {
@@ -34,7 +40,35 @@ class _IngresoDatoScreenState extends State<IngresoDatoScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            FutureBuilder<String?>(
+              future: _getUserEmail(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error al cargar el correo');
+                } else if (snapshot.hasData && snapshot.data != null) {
+                  return Text(
+                    'Usuario: ${snapshot.data}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                } else {
+                  return Text(
+                    'Usuario no autenticado',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                }
+              },
+            ),
+            SizedBox(height: 20),
             TextField(
               controller: _nombreController,
               decoration: InputDecoration(labelText: 'Nombre'),
